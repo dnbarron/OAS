@@ -3,7 +3,6 @@ title: "OAS Treasurer's Report"
 author: "David Barron"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
 ---
 
@@ -117,7 +116,7 @@ dta.long  %>%
 
 - Total expenditure since 1 January 2024 is £`r as.numeric(dta.cumsum[num.months, 3])`
 
-- **The current `r ifelse(dta.cumsum[num.months,2] - dta.cumsum[num.months, 3] > 0, "surplus", "deficit")` is £`r as.numeric(dta.cumsum[num.months,2] - dta.cumsum[num.months,3])`**.
+- **The current year's `r ifelse(dta.cumsum[num.months,2] - dta.cumsum[num.months, 3] > 0, "surplus", "deficit")` is £`r as.numeric(dta.cumsum[num.months,2] - dta.cumsum[num.months,3])`**.
 
 - Current bank balance £`r as.numeric(dta[nrows,6]) `
 
