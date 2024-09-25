@@ -49,6 +49,8 @@ fn <- paste0("C:\\Users\\dnbar\\Dropbox\\OAS\\", year, "\\OAS ", year, ".xlsx")
 
 dta <- read_xlsx(fn,
                  sheet = "Current account")
+savings.dta <- read_xlsx(fn,
+                 sheet = "Savings account")  
                  
 nrows <- nrow(dta)
 
@@ -56,12 +58,24 @@ nrows <- nrow(dta)
 dta.sum <- dta %>%
           mutate(Date = lubridate::ymd(Date),
                  Month = lubridate::month(Date)) %>%
+        filter(Category != "Transfer Out") %>%
+        filter(Category != "Transfer In") %>%
         group_by(Month) %>%
         summarise(
          Expend = sum(Expenditure, na.rm = TRUE),
          Inc = sum(Income, na.rm = TRUE)
         ) 
 
+savings.dta.sum <- savings.dta %>%
+          mutate(Date = lubridate::ymd(Date),
+                 Month = lubridate::month(Date)) %>%
+          filter(Category != "Transfer Out") %>%
+        filter(Category != "Transfer In") %>%
+        group_by(Month) %>%
+        summarise(
+         Expend = sum(Expenditure, na.rm = TRUE),
+         Inc = sum(Income, na.rm = TRUE)
+        ) 
   
 dta.cumsum <-  dta.sum %>%
     mutate(
@@ -70,6 +84,14 @@ dta.cumsum <-  dta.sum %>%
         ) %>%
         select(Month, Income, Expenditure)
 
+num.months <- dim(dta.cumsum)[1]
+
+savings.dta.cumsum <-  savings.dta.sum %>%
+    mutate(
+          Income = cumsum(Inc),
+          Expenditure = cumsum(Expend)
+        ) %>%
+        select(Month, Income, Expenditure)
 
 dta.long <- dta.cumsum %>% pivot_longer(
               cols = Income:Expenditure,
@@ -77,24 +99,45 @@ dta.long <- dta.cumsum %>% pivot_longer(
               values_to = "Amount"
               ) 
   
+savings.dta.long <- dta.cumsum %>% pivot_longer(
+              cols = Income:Expenditure,
+              names_to = "Type",
+              values_to = "Amount"
+              ) 
 
-savings.dta <- read_xlsx(fn,
-                 sheet = "Savings account")  
+total.dta.long <- dta.long
+total.dta.long[, "Amount"] <- total.dta.long[,"Amount"] +    savings.dta.long[,"Amount"]
 
 nrow.savings <- nrow(savings.dta)
 savings.balance <- as.numeric(savings.dta[nrow.savings,6])
+
+sum_tab <- dta %>%
+  group_by(Category) %>%
+  summarise(Income = sum(Income, na.rm = TRUE),
+            Expenditure = sum(Expenditure, na.rm = TRUE))
+
+
+savings.sum_tab <- savings.dta %>%
+  group_by(Category) %>%
+  summarise(Income = sum(Income, na.rm = TRUE),
+            Expenditure = sum(Expenditure, na.rm = TRUE))
+
+total.income <- as.numeric(dta.cumsum[num.months, 2]) + as.numeric(savings.dta.cumsum[num.months, 2]) 
+
+total.expenditure <- as.numeric(dta.cumsum[num.months, 3]) + as.numeric(savings.dta.cumsum[num.months, 3]) 
+
 
 ```
 
 ```{r plot, echo=FALSE}
 
-num.months <- dim(dta.cumsum)[1]
+
 
 all.months <- months[1:12]
 labels = all.months[1:num.months]
 
 
-dta.long  %>%
+total.dta.long  %>%
   ggplot(aes(x = Month, y = Amount, colour = Type)) + 
           geom_point() +
           geom_line() +
@@ -112,11 +155,11 @@ dta.long  %>%
 
 ## Income and Expenditure
 
-- Total income since 1 January 2024 is £`r as.numeric(dta.cumsum[num.months, 2])`
+- Total income since 1 January 2024 is £`r total.income`
 
-- Total expenditure since 1 January 2024 is £`r as.numeric(dta.cumsum[num.months, 3])`
+- Total expenditure since 1 January 2024 is £`r total.expenditure`
 
-- **The current year's `r ifelse(dta.cumsum[num.months,2] - dta.cumsum[num.months, 3] > 0, "surplus", "deficit")` is £`r as.numeric(dta.cumsum[num.months,2] - dta.cumsum[num.months,3])`**.
+- **The current year's `r ifelse(total.income - total.expenditure > 0, "surplus", "deficit")` is £`r total.income - total.expenditure`**.
 
 - Current bank balance £`r as.numeric(dta[nrows,6]) `
 
@@ -125,12 +168,12 @@ dta.long  %>%
 
 ```{r summary, eval=TRUE}
 
-sum_tab <- dta %>%
-  group_by(Category) %>%
-  summarise(Income = sum(Income, na.rm = TRUE),
-            Expenditure = sum(Expenditure, na.rm = TRUE))
 
 sum_tab %>% kbl() %>%
   kable_classic(full_width = FALSE)
 
+
+
+savings.sum_tab %>% kbl() %>%
+  kable_classic(full_width = FALSE)
 ```
