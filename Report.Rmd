@@ -169,13 +169,9 @@ total.dta.long  %>%
 
 
 ```{r summary, eval=TRUE}
-
+sum_tab <- bind_rows(sum_tab, savings.sum_tab)
 
 sum_tab %>% kbl() %>%
   kable_classic(full_width = FALSE)
 
-
-
-savings.sum_tab %>% kbl() %>%
-  kable_classic(full_width = FALSE)
 ```
