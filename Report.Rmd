@@ -48,9 +48,15 @@ months = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
 fn <- paste0("C:\\Users\\dnbar\\Dropbox\\OAS\\", year, "\\OAS ", year, ".xlsx")
 
 dta <- read_xlsx(fn,
-                 sheet = "Current account")
+                 sheet = "Current account") %>%
+        filter(Category != "Transfer Out") %>%
+        filter(Category != "Transfer In")
+
 savings.dta <- read_xlsx(fn,
-                 sheet = "Savings account")  
+                 sheet = "Savings account")  %>%
+        filter(Category != "Transfer Out") %>%
+        filter(Category != "Transfer In") 
+
                  
 nrows <- nrow(dta)
 
@@ -58,8 +64,6 @@ nrows <- nrow(dta)
 dta.sum <- dta %>%
           mutate(Date = lubridate::ymd(Date),
                  Month = lubridate::month(Date)) %>%
-        filter(Category != "Transfer Out") %>%
-        filter(Category != "Transfer In") %>%
         group_by(Month) %>%
         summarise(
          Expend = sum(Expenditure, na.rm = TRUE),
@@ -69,8 +73,6 @@ dta.sum <- dta %>%
 savings.dta.sum <- savings.dta %>%
           mutate(Date = lubridate::ymd(Date),
                  Month = lubridate::month(Date)) %>%
-          filter(Category != "Transfer Out") %>%
-        filter(Category != "Transfer In") %>%
         group_by(Month) %>%
         summarise(
          Expend = sum(Expenditure, na.rm = TRUE),
