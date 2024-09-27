@@ -21,11 +21,9 @@ library(kableExtra)
 opts_chunk$set(echo = FALSE)
 options(knitr.kable.NA = '')
 
+# Format money output
 inline_hook <- function(x){
-  
   format(x, nsmall = 2, scientific = FALSE, big.mark = ",")
-  
-  
 }
 
 knit_hooks$set(inline = inline_hook)
@@ -47,7 +45,7 @@ fn <- paste0("C:\\Users\\dnbar\\Dropbox\\OAS\\", year, "\\OAS ", year, ".xlsx")
 read_dta <- function(fn, sheet){
   read_xlsx(fn,
                  sheet = sheet) %>%
-        filter(Category != "Transfer Out") %>%
+        filter(Category != "Transfer Out") %>%  # remove transfers between accounts
         filter(Category != "Transfer In")
 }
 
@@ -55,6 +53,8 @@ dta <- read_dta(fn, "Current account")
 savings.dta <- read_dta(fn, "Savings account")
 
 nrows <- nrow(dta)
+
+# Summary of income and expenditure by month
 
 sum_dta <- function(dta){
   dta %>%
@@ -70,6 +70,7 @@ sum_dta <- function(dta){
 dta.sum <- sum_dta(dta)
 savings.dta.sum <- sum_dta(savings.dta)
 
+# calculate cummulative amounts for plotting
 calc.cumsum <- function(dta){
   dta %>%
     mutate(
@@ -84,6 +85,8 @@ savings.dta.cumsum <- calc.cumsum(savings.dta.sum)
   
 num.months <- dim(dta.cumsum)[1]
 
+# Transform data for plotting
+
 calc.long <- function(dta) {
   dta %>% pivot_longer(
               cols = Income:Expenditure,
@@ -95,6 +98,8 @@ calc.long <- function(dta) {
 dta.long <- calc.long(dta.cumsum)
 savings.dta.long <- calc.long(savings.dta.cumsum)
 
+
+# Add together amounts from current and savings accounts
 total.dta.long <- dta.long
 total.dta.long[, "Amount"] <- total.dta.long[, "Amount"] +
   savings.dta.long[, "Amount"]
