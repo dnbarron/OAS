@@ -84,11 +84,12 @@ dta.cumsum <- calc.cumsum(dta.sum)
 savings.dta.cumsum <- calc.cumsum(savings.dta.sum)
   
 num.months <- dim(dta.cumsum)[1]
+num.months.sav <- dim(savings.dta.cumsum)[1]
 
 # Transform data for plotting
 
 calc.long <- function(dta) {
-  dta %>% pivot_longer(
+  tmp <- dta %>% pivot_longer(
               cols = Income:Expenditure,
               names_to = "Type",
               values_to = "Amount"
@@ -100,9 +101,16 @@ savings.dta.long <- calc.long(savings.dta.cumsum)
 
 
 # Add together amounts from current and savings accounts
-total.dta.long <- dta.long
-total.dta.long[, "Amount"] <- total.dta.long[, "Amount"] +
-  savings.dta.long[, "Amount"]
+# Have to take account of times when there have been no changes to savings account
+#  during the current month
+total.dta.long.dta <- full_join(dta.long, savings.dta.long, 
+                            by = c("Month", "Type"))
+total.dta.long.dta[is.na(total.dta.long.dta[, 4]), 4] <- 0
+
+total.dta.long <- total.dta.long.dta %>%
+  mutate(Amount = Amount.x + Amount.y) %>%
+  select(Month, Type, Amount)
+
 
 nrow.savings <- nrow(savings.dta)
 savings.balance <- as.numeric(savings.dta[nrow.savings, 6])
@@ -112,16 +120,15 @@ calc.sum <- function(dta){
   group_by(Category) %>%
   summarise(Income = sum(Income, na.rm = TRUE),
             Expenditure = sum(Expenditure, na.rm = TRUE))
-
 }
 
 sum_tab <- calc.sum(dta)
 
 savings.sum_tab <- calc.sum(savings.dta)
   
-total.income <- as.numeric(dta.cumsum[num.months, 2]) + as.numeric(savings.dta.cumsum[num.months, 2]) 
+total.income <- as.numeric(dta.cumsum[num.months, 2]) + as.numeric(savings.dta.cumsum[num.months.sav, 2]) 
 
-total.expenditure <- as.numeric(dta.cumsum[num.months, 3]) + as.numeric(savings.dta.cumsum[num.months, 3]) 
+total.expenditure <- as.numeric(dta.cumsum[num.months, 3]) + as.numeric(savings.dta.cumsum[num.months.sav, 3]) 
 
 
 ```
