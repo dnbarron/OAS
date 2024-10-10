@@ -1,12 +1,4 @@
 ---
-title: "OAS Treasurer's Report"
-author: "David Barron"
-date: "`r Sys.Date()`"
-output:
-  html_document: default
----
-
----
 title: "Treasurer's Report"
 author: "David Barron"
 date: "`r format(Sys.Date(), '%d %B %Y' )`"
@@ -103,6 +95,7 @@ savings.dta.long <- calc.long(savings.dta.cumsum)
 # Add together amounts from current and savings accounts
 # Have to take account of times when there have been no changes to savings account
 #  during the current month
+
 total.dta.long.dta <- full_join(dta.long, savings.dta.long, 
                             by = c("Month", "Type"))
 total.dta.long.dta[is.na(total.dta.long.dta[, 4]), 4] <- 0
