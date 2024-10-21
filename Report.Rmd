@@ -165,3 +165,53 @@ sum_tab %>% kbl() %>%
   kable_classic(full_width = FALSE)
 
 ```
+
+```{r exhibitions}
+calc_totals <- function(tabdata){
+  tot_row <- tibble(Category = "TOTAL", Expend = sum(tabdata[, 2]),
+                    Inc = sum(tabdata[, 3]))
+  bind_rows(tabdata, tot_row)
+}
+
+calc_exhibitions <- function(dta, exhibition = "Open"){
+  dta %>%
+          mutate(Date = lubridate::ymd(Date),
+                 Month = lubridate::month(Date)) %>%
+        filter(Exhibition == exhibition) %>%
+        group_by(Category) %>%
+        summarise(
+          Expend = sum(Expenditure, na.rm = TRUE),
+          Inc = sum(Income, na.rm = TRUE)
+        ) %>%
+    calc_totals(.)
+}
+ 
+members_dta <- calc_exhibitions(dta, "Members")
+
+
+open_dta <- calc_exhibitions(dta)
+
+```
+
+### Members' exhibition
+
+```{r members}
+
+nrow_mbs <- dim(members_dta)[1]
+
+members_dta %>% kbl() %>%
+  kable_classic(full_width = FALSE) %>%
+  row_spec(nrow_mbs, bold = TRUE, color = "white", background = "black")
+
+```
+
+### Open exhibition
+
+```{r open}
+nrow_open <- dim(open_dta)[1]
+open_dta %>% kbl() %>%
+  kable_classic(full_width = FALSE) %>%
+   row_spec(nrow_open, bold = TRUE, color = "white", background = "black")
+
+
+```
