@@ -235,5 +235,4 @@ open_dta %>% kbl(format.args = list(big.mark = ",")) %>%
   
 ```
 
-
-Note: payments of £750 to the exhibition organisers and approximately £1,300 to St John's College are still outstanding.
+The Open Exhibition made a profit of £`r -as.numeric(open_dta[nrow_open, "Expenditure"] - open_dta[nrow_open, "Income"])`.
